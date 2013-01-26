@@ -27,6 +27,6 @@
 // you have opened.
 //---------------------------------------------------------------
 
-JoinSpec BlockNestedLoopJoin(JoinSpec specOfR, JoinSpec specOfS, int B)
+HeapFile* BlockNestedLoopJoin(JoinSpec specOfR, JoinSpec specOfS, int B)
 {
 }

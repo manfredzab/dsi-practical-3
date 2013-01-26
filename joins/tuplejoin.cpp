@@ -30,34 +30,19 @@
 
 
 
-JoinSpec TupleNestedLoopJoin(JoinSpec specOfR, JoinSpec specOfS)
+HeapFile* TupleNestedLoopJoin(JoinSpec specOfR, JoinSpec specOfS)
 {
-	JoinSpec result;
 	Status status = OK;
-
-	Scan* scanR = specOfR.file->OpenScan(status);
-	if (OK != status)
-	{
-		cerr << "ERROR: cannot open scan on the relation R heap file.\n";
-		return result;
-	}
-
-	Scan* scanS = specOfS.file->OpenScan(status);
-	if (OK != status)
-	{
-		cerr << "ERROR: cannot open scan on the relation S heap file.\n";
-		return result;
-	}
 
 	HeapFile* joinedFile;
 	joinedFile = new HeapFile(NULL, status); // create a result HeapFile
 	if (OK != status)
 	{
 		cerr << "ERROR: cannot create a file for the joined relation.\n";
-		return result;
+		return NULL;
 	}
 
-	// Join the relations
+
 	int recLenR = specOfR.recLen;
 	int recLenS = specOfS.recLen;
 	int recLenJoined = recLenR + recLenS;
@@ -68,30 +53,44 @@ JoinSpec TupleNestedLoopJoin(JoinSpec specOfR, JoinSpec specOfS)
 
 	RecordID ridR, ridS, ridJoined;
 
-	while (OK == scanR->GetNext(ridR, recR, recLenR))
+	// Join the relations
+	Scan* scanR = specOfR.file->OpenScan(status);
+	if (OK != status)
 	{
-		while (OK == scanS->GetNext(ridS, recS, recLenS))
-		{
-			// TODO: check for field equality (now crossing all) using specOfR.joinAttr, specOfR.numOfAttr, etc!
-
-			MakeNewRecord(recJoined, recR, recS, recLenR, recLenS);
-			joinedFile->InsertRecord(recJoined, recLenJoined, ridJoined);
-		}
+		cerr << "ERROR: cannot open scan on the relation R heap file.\n";
+		return NULL;
 	}
 
+	while (OK == scanR->GetNext(ridR, recR, recLenR))
+	{
+		Scan* scanS = specOfS.file->OpenScan(status);
+		if (OK != status)
+		{
+			cerr << "ERROR: cannot open scan on the relation S heap file.\n";
+			return NULL;
+		}
+
+		while (OK == scanS->GetNext(ridS, recS, recLenS))
+		{
+			int* joinArgR = (int*)&recR[specOfR.offset];
+			int* joinArgS = (int*)&recS[specOfS.offset];
+
+			if (*joinArgR == *joinArgS)
+			{
+				MakeNewRecord(recJoined, recR, recS, recLenR, recLenS);
+				joinedFile->InsertRecord(recJoined, recLenJoined, ridJoined);
+			}
+		}
+
+		delete scanS;
+	}
+
+	// Release the allocated resources
 	delete scanR;
-	delete scanS;
 
 	delete[] recR;
 	delete[] recS;
 	delete[] recJoined;
 
-	// Fill and return the result
-	result.file = joinedFile;
-	result.joinAttr = -1;
-	result.numOfAttr = specOfR.numOfAttr + specOfS.numOfAttr;
-	result.offset = -1;
-	result.recLen = recLenJoined;
-
-	return result;
+	return joinedFile;
 }

@@ -197,6 +197,7 @@ void PrintResult (HeapFile *RS, char *name)
 	while (scan->GetNext(rid, (char *)&e, len) != DONE)
 	{
 		fprintf(f, "%d %d %d\n", e.proj, e.projid, e.id);
+		printf("%d %d %d\n", e.proj, e.projid, e.id);
 	}
 	fclose(f);
   delete scan;
@@ -224,6 +225,7 @@ void PrintR (HeapFile *R, char *name)
 	while (scan->GetNext(rid, (char *)&e, len) != DONE)
 	{
 		fprintf(f, "%d %d %d %d %d %d\n", e.id, e.age, e.proj,e.rating, e.salary, e.dept);
+		printf("%d %d %d %d %d %d\n", e.id, e.age, e.proj,e.rating, e.salary, e.dept);
 	}
 	fclose(f);
   delete scan;
@@ -251,6 +253,7 @@ void PrintS (HeapFile *S, char *name)
 	while (scan->GetNext(rid, (char *)&p, len) != DONE)
 	{
 		fprintf(f, "%d %d %d %d \n", p.id, p.fund, p.manager, p.status);
+		printf("%d %d %d %d \n", p.id, p.fund, p.manager, p.status);
 	}
 	fclose(f);
   delete scan;

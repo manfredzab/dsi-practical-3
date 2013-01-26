@@ -32,6 +32,6 @@
 //---------------------------------------------------------------
 
 
-JoinSpec IndexNestedLoopJoin(JoinSpec specOfR, JoinSpec specOfS)
+HeapFile* IndexNestedLoopJoin(JoinSpec specOfR, JoinSpec specOfS)
 {
 }

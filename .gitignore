@@ -12,3 +12,7 @@
 *.la
 *.a
 /bin
+/MINIBASE.DB
+/R
+/RS
+/S
