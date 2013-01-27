@@ -175,7 +175,7 @@ void CreateSpecForS (JoinSpec &spec)
 // _name_.  Useful for debugging.
 //------------------------------------------------------------------
 
-void PrintResult (HeapFile *RS, char *name)
+void PrintResult (HeapFile *RS, char *name, bool printToScreen)
 {
 	Status s;
 	FILE *f;
@@ -197,7 +197,7 @@ void PrintResult (HeapFile *RS, char *name)
 	while (scan->GetNext(rid, (char *)&e, len) != DONE)
 	{
 		fprintf(f, "%d %d %d\n", e.proj, e.projid, e.id);
-		printf("%d %d %d\n", e.proj, e.projid, e.id);
+		if (printToScreen) printf("%d %d %d\n", e.proj, e.projid, e.id);
 	}
 	fclose(f);
   delete scan;

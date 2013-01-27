@@ -43,7 +43,7 @@ void CreateSpecForR (JoinSpec &spec);// Create Join Specification for R
 HeapFile *SortFile(HeapFile *S, int len, int offset);
 // Sort a relation stored in HeapFile S, len is the length of record, offset is the offset
 // of sort key attribute from the beginning of record, i.e. recptr+offset point to the sort key
-void PrintResult(HeapFile *RS, char *name); // Print the result of Joined relation RS to file whose filename is name
+void PrintResult(HeapFile *RS, char *name, bool printToScreen = true); // Print the result of Joined relation RS to file whose filename is name
 void PrintR (HeapFile *R, char *name);
 void PrintS (HeapFile *S, char *name);
 #endif

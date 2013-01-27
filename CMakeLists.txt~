@@ -12,5 +12,5 @@ find_library(JOINS_LIB joins lib/)
 
 add_subdirectory(joins)
 
-add_executable (minibase-joins main.cpp jointest.cpp)
+add_executable (minibase-joins main.cpp test.cpp)
 target_link_libraries (minibase-joins joins ${BTREE_LIB} ${SPACEMGR_LIB} ${BUFMGR_LIB} ${GLOBALDEFS_LIB} ${SPACEMGR_LIB} ${BUFMGR_LIB}) 

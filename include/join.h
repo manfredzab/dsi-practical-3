@@ -18,14 +18,14 @@ typedef struct JoinSpec {
 #define ATTR_INT  attrInteger
 #define ATTR_STRING attrString
 
-#define NUM_OF_REC_IN_R 6 // # of records in R
-#define NUM_OF_REC_IN_S 4 // # of records in S
+//#define NUM_OF_REC_IN_R 6 // # of records in R
+//#define NUM_OF_REC_IN_S 4 // # of records in S
 
-//#define NUM_OF_REC_IN_R 10000 // # of records in R
-//#define NUM_OF_REC_IN_S 2500 // # of records in S
+//#define NUM_OF_REC_IN_R 25000 // # of records in R
+//#define NUM_OF_REC_IN_S 6250 // # of records in S
 
-//#define NUM_OF_REC_IN_R 10000 // # of records in R
-//#define NUM_OF_REC_IN_S 2500 // # of records in S
+#define NUM_OF_REC_IN_R 10000 // # of records in R
+#define NUM_OF_REC_IN_S 2500 // # of records in S
 
 
 
@@ -41,5 +41,7 @@ HeapFile* TupleNestedLoopJoin(JoinSpec, JoinSpec);
 HeapFile* BlockNestedLoopJoin(JoinSpec, JoinSpec, int);
 HeapFile* IndexNestedLoopJoin(JoinSpec, JoinSpec);
 
+
+HeapFile *SortFile(HeapFile *S, int len, int offset);
 #endif
 

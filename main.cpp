@@ -9,32 +9,27 @@
 
 #include "timer.h"
 
-int MINIBASE_RESTART_FLAG = 0;// used in minibase part
+#define RUN_TESTS 0 // Test mode ON/OFF
 
-#define VERBOSE 1 // 1 - verbose (human readable) output, 0 - machine readable output
+#if RUN_TESTS
+#include "include/jointest.h"
+#endif
+
+int MINIBASE_RESTART_FLAG = 0;// used in minibase part
 
 #define NUM_OF_DB_PAGES  2000 // define # of DB pages
 #define NUM_OF_BUF_PAGES 50 // define Buf manager size.You will need to change this for the analysis
-//#define NUM_OF_BUF_PAGES 50 // define Buf manager size.You will need to change this for the analysis
-
-
-void printStats(int pinCount, int missCount, double elapsedTime)
-{
-#if VERBOSE
-	cout << "Elapsed time: " << elapsedTime << " s.\n";
-	cout << "Number of buffer pool misses: " << missCount << " (out of " << pinCount << ").\n";
-#else
-	cout << elapsedTime << "\n" << missCount;
-#endif
-}
-
 
 int main()
 {
-	Status s;
+#if RUN_TESTS
+	return RunTests();
+#endif
 
 	// Remove MINIBASE.DB if it exists
 	std::remove("MINIBASE.DB");
+
+	Status s;
 
 	// Initialize Minibase's Global Variables
 	minibase_globals = new SystemDefs(s, 
@@ -67,29 +62,17 @@ int main()
 	MINIBASE_BM->ResetStat();
 
 	timer.start();
-	HeapFile* joinedFile = TupleNestedLoopJoin(specOfR, specOfS);
+	// =================== TIMED SECTION ===================
+
+	// TupleNestedLoopJoin(specOfR, specOfS);
+	BlockNestedLoopJoin(specOfR, specOfS, (MINIBASE_BM->GetNumOfUnpinnedBuffers() - 3 * 3) * MINIBASE_PAGESIZE);
+
+	// ================ END OF TIMED SECTION ===============
 	double elapsedTime = timer.stop();
 
+	// Obtain and print statistics
 	MINIBASE_BM->GetStat(pinCount, missCount);
-	
-	// Print statistics
-	printStats(pinCount, missCount, elapsedTime);
+	cout << elapsedTime << "\n" << missCount << "\n";
 
-#if VERBOSE
-
-	// Print out relations
-	cout << "\nRelation R [Employee (id, age, proj, salary, rating, dept)]:\n";
-	PrintR(specOfR.file, specOfR.relName);
-
-	cout << "\nRelation S [Project (id, fund, manager, status)]:\n";
-	PrintS(specOfS.file, specOfS.relName);
-
-	cout << "\nJoined relation [Employee.proj = Project.id] (E.proj, R.id, E.id):\n";
-	char* resultFileName = new char[3];
-	strcpy(resultFileName, "RS");
-	PrintResult(joinedFile, resultFileName);
-
-#endif
-
-	return 1;
+	return 0;
 }
