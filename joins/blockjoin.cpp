@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 #include "../include/minirel.h"
 #include "../include/heapfile.h"
@@ -17,8 +16,7 @@ HeapFile* BlockNestedLoopJoin(JoinSpec specOfR, JoinSpec specOfS, int B)
 	Status status = OK;
 
 	// Create a HeapFile for join results
-	HeapFile* joinedFile;
-	joinedFile = new HeapFile(NULL, status);
+	HeapFile* joinedFile = new HeapFile(NULL, status);
 	if (OK != status)
 	{
 		cerr << "ERROR: cannot create a file for the joined relation.\n";

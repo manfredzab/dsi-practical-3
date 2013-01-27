@@ -9,7 +9,7 @@
 
 #include "timer.h"
 
-#define RUN_TESTS 0 // Test mode ON/OFF
+#define RUN_TESTS 1 // Test mode ON/OFF
 
 #if RUN_TESTS
 #include "include/jointest.h"
@@ -64,8 +64,9 @@ int main()
 	timer.start();
 	// =================== TIMED SECTION ===================
 
-	// TupleNestedLoopJoin(specOfR, specOfS);
-	BlockNestedLoopJoin(specOfR, specOfS, (MINIBASE_BM->GetNumOfUnpinnedBuffers() - 3 * 3) * MINIBASE_PAGESIZE);
+	//TupleNestedLoopJoin(specOfR, specOfS);
+	//BlockNestedLoopJoin(specOfR, specOfS, (MINIBASE_BM->GetNumOfUnpinnedBuffers() - 3 * 3) * MINIBASE_PAGESIZE);
+	IndexNestedLoopJoin(specOfR, specOfS);
 
 	// ================ END OF TIMED SECTION ===============
 	double elapsedTime = timer.stop();

@@ -49,17 +49,23 @@ int RunTests()
 	// File names for comparison
 	const char* nestedTupleFileName = "nestedTuple";
 	const char* nestedBlockFileName = "nestedBlock";
+	const char* nestedIndexFileName = "nestedIndex";
 
 	// Join
-	HeapFile* joinedFile;
+	HeapFile* tupleJoinedFile = TupleNestedLoopJoin(specOfR, specOfS);
+	//PrintVerboseInfo(specOfR, specOfS, tupleJoinedFile);
+	SaveJoinedRelToFile(specOfR, specOfS, tupleJoinedFile, nestedTupleFileName);
+	tupleJoinedFile->DeleteFile();
 
-	joinedFile = TupleNestedLoopJoin(specOfR, specOfS);
-	SaveJoinedRelToFile(specOfR, specOfS, joinedFile, nestedTupleFileName);
-	joinedFile->DeleteFile();
+	HeapFile* blockJoinedFile = BlockNestedLoopJoin(specOfR, specOfS, (MINIBASE_BM->GetNumOfUnpinnedBuffers() - 3 * 3) * MINIBASE_PAGESIZE);
+	//PrintVerboseInfo(specOfR, specOfS, blockJoinedFile);
+	SaveJoinedRelToFile(specOfR, specOfS, blockJoinedFile, nestedBlockFileName);
+	blockJoinedFile->DeleteFile();
 
-	joinedFile = BlockNestedLoopJoin(specOfR, specOfS, (MINIBASE_BM->GetNumOfUnpinnedBuffers() - 3 * 3) * MINIBASE_PAGESIZE);
-	SaveJoinedRelToFile(specOfR, specOfS, joinedFile, nestedBlockFileName);
-	joinedFile->DeleteFile();
+	HeapFile* indexJoinedFile = IndexNestedLoopJoin(specOfR, specOfS);
+	//PrintVerboseInfo(specOfR, specOfS, indexJoinedFile);
+	SaveJoinedRelToFile(specOfR, specOfS, indexJoinedFile, nestedIndexFileName);
+	indexJoinedFile->DeleteFile();
 
 	if (!AreFilesEqual(nestedTupleFileName, nestedBlockFileName))
 	{
@@ -70,8 +76,23 @@ int RunTests()
 		cerr << "FAIL: nested tuple join and nested block joins DO NOT yield equivalent results (see files " << nestedTupleFileName << ", " << nestedBlockFileName << ").\n";
 	}
 
-	// Print the results
-	//PrintVerboseInfo(specOfR, specOfS, joinedFileTupleNested);
+	if (!AreFilesEqual(nestedBlockFileName, nestedIndexFileName))
+	{
+		cout << "PASS: nested block join and nested index joins yield equivalent results.\n";
+	}
+	else
+	{
+		cerr << "FAIL: nested block join and nested index joins DO NOT yield equivalent results (see files " << nestedBlockFileName << ", " << nestedIndexFileName << ").\n";
+	}
+
+	if (!AreFilesEqual(nestedIndexFileName, nestedTupleFileName))
+	{
+		cout << "PASS: nested index join and nested tuple joins yield equivalent results.\n";
+	}
+	else
+	{
+		cerr << "FAIL: nested index join and nested tuple joins DO NOT yield equivalent results (see files " << nestedIndexFileName << ", " << nestedTupleFileName << ").\n";
+	}
 
 	return 0;
 }
@@ -84,6 +105,7 @@ void SaveJoinedRelToFile(JoinSpec specOfR, JoinSpec specOfS, HeapFile* joinedFil
 
 	HeapFile* sortedJoinedFile = SortFile(joinedFile, specOfR.recLen + specOfS.recLen, 0);
 	PrintResult(sortedJoinedFile, resultFileName, false);
+	sortedJoinedFile->DeleteFile();
 }
 
 

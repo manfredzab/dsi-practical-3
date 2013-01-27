@@ -34,8 +34,7 @@ HeapFile* TupleNestedLoopJoin(JoinSpec specOfR, JoinSpec specOfS)
 {
 	Status status = OK;
 
-	HeapFile* joinedFile;
-	joinedFile = new HeapFile(NULL, status); // create a result HeapFile
+	HeapFile* joinedFile = new HeapFile(NULL, status); // create a result HeapFile
 	if (OK != status)
 	{
 		cerr << "ERROR: cannot create a file for the joined relation.\n";
