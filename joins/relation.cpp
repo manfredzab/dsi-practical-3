@@ -45,7 +45,7 @@ void RandomPermutate (short *permutation, int n)
 // Employee (defined in relation.h)
 //--------------------------------------------------------
 
-void CreateR()
+void CreateR(int numOfRecInR, int numOfRecInS)
 {
 	Status s;
 	HeapFile *F = new HeapFile ("R", s); // new HeapFile storing records of R
@@ -57,15 +57,15 @@ void CreateR()
 
 	Employee e;
 	RecordID rid;
-	short permutation[NUM_OF_REC_IN_R];
+	short permutation[numOfRecInR];
 
-	RandomPermutate (permutation, NUM_OF_REC_IN_R); // generate a random array of integer
+	RandomPermutate (permutation, numOfRecInR); // generate a random array of integer
 
-	for (int i = 0; i < NUM_OF_REC_IN_R; i++)
+	for (int i = 0; i < numOfRecInR; i++)
 	{
 		e.id   = permutation[i];
 		e.age  = rand() % 20 + 20;
-		e.proj = rand() % NUM_OF_REC_IN_S;
+		e.proj = rand() % numOfRecInS;
 		e.salary = (rand() % 300)*100;
 		e.rating = rand() % 5;
 		e.dept  = rand() % 30;
@@ -113,7 +113,7 @@ CreateSpecForR (JoinSpec &spec)
 // Project (defined in relation.h)
 //--------------------------------------------------------
 
-void CreateS()
+void CreateS(int numOfRecInR, int numOfRecInS)
 {
 	Status s;
 	HeapFile *F = new HeapFile ("S", s);
@@ -125,14 +125,14 @@ void CreateS()
 
 	Project e;
 	RecordID rid;
-	short permutation[NUM_OF_REC_IN_S];
+	short permutation[numOfRecInS];
 
-	RandomPermutate (permutation, NUM_OF_REC_IN_S);
+	RandomPermutate (permutation, numOfRecInS);
 
-	for (int i = 0; i < NUM_OF_REC_IN_S; i++)
+	for (int i = 0; i < numOfRecInS; i++)
 	{
 		e.id   = permutation[i];
-		e.manager  = rand() % NUM_OF_REC_IN_R;
+		e.manager  = rand() % numOfRecInR;
 		e.fund = (rand() % 500)*10;
 		e.status = rand() % 5;
 

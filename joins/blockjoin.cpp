@@ -7,9 +7,11 @@
 #include "../include/scan.h"
 #include "../include/join.h"
 #include "../include/relation.h"
-#include "../include/bufmgr.h"
 
-
+HeapFile* BlockNestedLoopJoin(JoinSpec specOfR, JoinSpec specOfS)
+{
+	return BlockNestedLoopJoin(specOfR, specOfS, (MINIBASE_BM->GetNumOfUnpinnedBuffers() - 3 * 3) * MINIBASE_PAGESIZE);
+}
 
 HeapFile* BlockNestedLoopJoin(JoinSpec specOfR, JoinSpec specOfS, int B)
 {

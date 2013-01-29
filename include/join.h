@@ -2,7 +2,7 @@
 #define JOIN_H
 
 #include "minirel.h"
-#include "time.h"
+#include "bufmgr.h"
 #define MAX_REL_NAME_LENGTH 6 // MAX relation name length
 #define MAX_ATTR 10 // Max # of attributes
 
@@ -24,10 +24,8 @@ typedef struct JoinSpec {
 //#define NUM_OF_REC_IN_R 25000 // # of records in R
 //#define NUM_OF_REC_IN_S 6250 // # of records in S
 
-#define NUM_OF_REC_IN_R 10000 // # of records in R
-#define NUM_OF_REC_IN_S 2500 // # of records in S
-
-
+//#define NUM_OF_REC_IN_R 10000 // # of records in R
+//#define NUM_OF_REC_IN_S 2500 // # of records in S
 
 #define NUM_OF_ATTR_IN_R 6
 #define NUM_OF_ATTR_IN_S 4
@@ -37,8 +35,10 @@ typedef struct JoinSpec {
 void MakeNewRecord(char *newRecord, char *r, char *s, int recLenR, int recLenS);
 
 HeapFile* TupleNestedLoopJoin(JoinSpec, JoinSpec);
-// int arg is blocksize
-HeapFile* BlockNestedLoopJoin(JoinSpec, JoinSpec, int);
+
+HeapFile* BlockNestedLoopJoin(JoinSpec, JoinSpec);
+HeapFile* BlockNestedLoopJoin(JoinSpec, JoinSpec, int); // Explicitly specified buffer size
+
 HeapFile* IndexNestedLoopJoin(JoinSpec, JoinSpec);
 
 

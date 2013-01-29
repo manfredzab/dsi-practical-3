@@ -35,10 +35,9 @@ int RunTests()
 	// Initialize random seed
 	srand(1);
 
-	// Create Random Relations R(outer relation) and S for joining. The definition is in relation.h,
-	// # of tuples: NUM_OF_REC_IN_R, NUM_OF_REC_IN_S in join.h
-	CreateR();
-	CreateS();
+	// Create Random Relations R(outer relation) and S for joining. The definition is in relation.h.
+	CreateR(10000, 2500);
+	CreateS(10000, 2500);
 
 	// Initialize the specification for joins
 	JoinSpec specOfS, specOfR;

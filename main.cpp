@@ -1,3 +1,4 @@
+// --------------------------------- INCLUDES ---------------------------------
 #include <stdlib.h>
 #include <ctype.h>
 
@@ -8,45 +9,136 @@
 #include "include/relation.h"
 
 #include "timer.h"
+// ----------------------------------------------------------------------------
 
-#define RUN_TESTS 1 // Test mode ON/OFF
+
+// -------------------------------- DEFINITIONS -------------------------------
+// Minibase definitions
+int MINIBASE_RESTART_FLAG = 0; // Used in Minibase part
+#define NUM_OF_DB_PAGES  2000  // # of DB pages
+
+// Performance analyser definitions
+#define RUN_TESTS           0  // Test mode ON/OFF
+#define REPETITION_COUNT    5  // Number of repetitions for each algorithm
 
 #if RUN_TESTS
 #include "include/jointest.h"
 #endif
+// ----------------------------------------------------------------------------
 
-int MINIBASE_RESTART_FLAG = 0;// used in minibase part
 
-#define NUM_OF_DB_PAGES  2000 // define # of DB pages
-#define NUM_OF_BUF_PAGES 50 // define Buf manager size.You will need to change this for the analysis
+// ----------------------------------- ENUMS ----------------------------------
+enum JoinAlgorithm
+{
+	TUPLE_NESTED_LOOP,
+	BLOCK_NESTED_LOOP,
+	INDEX_NESTED_LOOP
+};
+// ----------------------------------------------------------------------------
 
+
+// ------------------------------- DECLARATIONS -------------------------------
+void AnalysePerformance(JoinAlgorithm algorithmType,
+						int numOfBufPages,
+						int numOfRecInR,
+						int numOfRecInS,
+						double& elapsedTime,
+						long& pinCount,
+						long& missCount);
+// ----------------------------------------------------------------------------
+
+
+// ---------------------------------- METHODS ---------------------------------
 int main()
 {
 #if RUN_TESTS
 	return RunTests();
 #endif
 
+	// Initialise random seed
+	srand(1);
+
+	JoinAlgorithm joinAlgorithms[] = { TUPLE_NESTED_LOOP, BLOCK_NESTED_LOOP, INDEX_NESTED_LOOP };
+	for (int algorithmIndex = 0; algorithmIndex < 3; algorithmIndex++)
+	{
+		JoinAlgorithm joinAlgorithm = joinAlgorithms[algorithmIndex];
+		for (int bufferPoolSize = 10; bufferPoolSize <= NUM_OF_DB_PAGES; bufferPoolSize *= 3)
+		{
+			for (int numberOfRecordsInR = 10; numberOfRecordsInR <= 10000; numberOfRecordsInR *= 10)
+			{
+				for (int numberOfRecordsInS = 10; numberOfRecordsInS <= 10000; numberOfRecordsInS *= 10)
+				{
+					cout << "Algorithm:\t" << algorithmIndex << "\n";
+					cout << "Buffer pool size:\t" << bufferPoolSize << "\n";
+					cout << "Number of records in R:\t" << numberOfRecordsInR << "\n";
+					cout << "Number of records in S:\t" << numberOfRecordsInS << "\n";
+
+					double avgElapsedTime = 0.0, avgPinCount = 0.0, avgMissCount = 0.0;
+					for (int repetition = 0; repetition < REPETITION_COUNT; repetition++)
+					{
+						double elapsedTime;
+						long pinCount, missCount;
+
+						AnalysePerformance(joinAlgorithm, bufferPoolSize, numberOfRecordsInR, numberOfRecordsInS, elapsedTime, pinCount, missCount);
+
+						avgElapsedTime += elapsedTime / (double)REPETITION_COUNT;
+						avgPinCount += (double)pinCount / (double)REPETITION_COUNT;
+						avgMissCount += (double)missCount / (double)REPETITION_COUNT;
+					}
+
+					cout << "Average elapsed time:\t" << avgElapsedTime << "\n";
+					cout << "Average miss/pin count:\t" << avgMissCount << "\t" << avgPinCount << "\n\n";
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
+//
+// Input:  algorithmType - join algorithm type,
+//         numOfBufPages - number of buffer pages,
+//         numOfRecInR   - number of records for relation R,
+//         numOfRecInS   - number of records for relation S.
+//
+// Output: elapsedTime   - elapsed time to perform the join,
+//         pinCount      - number of pages pinned,
+//         missCount     - number of misses when pinning the pages
+//
+void AnalysePerformance(JoinAlgorithm algorithmType,
+						int numOfBufPages,
+						int numOfRecInR,
+						int numOfRecInS,
+						double& elapsedTime,
+						long& pinCount,
+						long& missCount)
+{
+	HeapFile* (*joinAlgorithm) (JoinSpec, JoinSpec);
+	switch (algorithmType)
+	{
+		case TUPLE_NESTED_LOOP: joinAlgorithm = &TupleNestedLoopJoin; break;
+		case BLOCK_NESTED_LOOP: joinAlgorithm = &BlockNestedLoopJoin; break;
+		case INDEX_NESTED_LOOP: joinAlgorithm = &IndexNestedLoopJoin; break;
+	}
+
 	// Remove MINIBASE.DB if it exists
 	std::remove("MINIBASE.DB");
 
 	Status s;
 
-	// Initialize Minibase's Global Variables
+	// Initialise Minibase's Global Variables
 	minibase_globals = new SystemDefs(s, 
 		"MINIBASE.DB",
 		"MINIBASE.LOG",
 		NUM_OF_DB_PAGES,   // Number of pages allocated for database
 		500,
-		NUM_OF_BUF_PAGES,  // Number of frames in buffer pool
+		numOfBufPages,  // Number of frames in buffer pool
 		NULL);
-	
-	// Initialize random seed
-	srand(1);
 
-	// Create Random Relations R(outer relation) and S for joining. The definition is in relation.h, 
-	// # of tuples: NUM_OF_REC_IN_R, NUM_OF_REC_IN_S in join.h
-	CreateR();
-	CreateS();
+	// Create Random Relations R(outer relation) and S for joining. The definition is in relation.h/
+	CreateR(numOfRecInR, numOfRecInS);
+	CreateS(numOfRecInR, numOfRecInS);
 
 	// Initialize the specification for joins
 	JoinSpec specOfS, specOfR;
@@ -58,22 +150,19 @@ int main()
 	Timer timer;
 
 	// Join and collect statistics
-	long pinCount, missCount;
 	MINIBASE_BM->ResetStat();
 
 	timer.start();
 	// =================== TIMED SECTION ===================
 
-	//TupleNestedLoopJoin(specOfR, specOfS);
-	//BlockNestedLoopJoin(specOfR, specOfS, (MINIBASE_BM->GetNumOfUnpinnedBuffers() - 3 * 3) * MINIBASE_PAGESIZE);
-	IndexNestedLoopJoin(specOfR, specOfS);
+	joinAlgorithm(specOfR, specOfS);
 
 	// ================ END OF TIMED SECTION ===============
-	double elapsedTime = timer.stop();
+	elapsedTime = timer.stop();
 
-	// Obtain and print statistics
+	// Obtain statistics
 	MINIBASE_BM->GetStat(pinCount, missCount);
-	cout << elapsedTime << "\n" << missCount << "\n";
-
-	return 0;
+//	cout << elapsedTime << "\n";
+//	cout << missCount << "/" << pinCount << "\n";
 }
+// ----------------------------------------------------------------------------
