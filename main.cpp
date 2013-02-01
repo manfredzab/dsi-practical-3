@@ -18,7 +18,7 @@ int MINIBASE_RESTART_FLAG = 0; // Used in Minibase part
 #define NUM_OF_DB_PAGES  2000  // # of DB pages
 
 // Performance analyser definitions
-#define RUN_TESTS           0  // Test mode ON/OFF
+#define RUN_TESTS           1  // Test mode ON/OFF
 #define REPETITION_COUNT    5  // Number of repetitions for each algorithm
 
 #if RUN_TESTS
@@ -59,14 +59,19 @@ int main()
 	srand(1);
 
 	JoinAlgorithm joinAlgorithms[] = { TUPLE_NESTED_LOOP, BLOCK_NESTED_LOOP, INDEX_NESTED_LOOP };
+
 	for (int algorithmIndex = 0; algorithmIndex < 3; algorithmIndex++)
+	//int algorithmIndex = 1;
 	{
 		JoinAlgorithm joinAlgorithm = joinAlgorithms[algorithmIndex];
-		for (int bufferPoolSize = 10; bufferPoolSize <= NUM_OF_DB_PAGES; bufferPoolSize *= 3)
+		for (int bufferPoolSize = 10; bufferPoolSize <= NUM_OF_DB_PAGES; bufferPoolSize *= 2)
+		//int bufferPoolSize = 50;
 		{
-			for (int numberOfRecordsInR = 10; numberOfRecordsInR <= 10000; numberOfRecordsInR *= 10)
+			for (int numberOfRecordsInR = 4; numberOfRecordsInR <= 16384; numberOfRecordsInR *= 2)
+			//int numberOfRecordsInR = 10000;
 			{
-				for (int numberOfRecordsInS = 10; numberOfRecordsInS <= 10000; numberOfRecordsInS *= 10)
+				for (int numberOfRecordsInS = 4; numberOfRecordsInS <= 16384; numberOfRecordsInS *= 2)
+				//int numberOfRecordsInS = numberOfRecordsInR / 4;
 				{
 					cout << "Algorithm:\t" << algorithmIndex << "\n";
 					cout << "Buffer pool size:\t" << bufferPoolSize << "\n";
@@ -84,10 +89,11 @@ int main()
 						avgElapsedTime += elapsedTime / (double)REPETITION_COUNT;
 						avgPinCount += (double)pinCount / (double)REPETITION_COUNT;
 						avgMissCount += (double)missCount / (double)REPETITION_COUNT;
-					}
 
 					cout << "Average elapsed time:\t" << avgElapsedTime << "\n";
 					cout << "Average miss/pin count:\t" << avgMissCount << "\t" << avgPinCount << "\n\n";
+					
+					}
 				}
 			}
 		}
@@ -164,5 +170,6 @@ void AnalysePerformance(JoinAlgorithm algorithmType,
 	MINIBASE_BM->GetStat(pinCount, missCount);
 //	cout << elapsedTime << "\n";
 //	cout << missCount << "/" << pinCount << "\n";
+	delete minibase_globals;
 }
 // ----------------------------------------------------------------------------
